@@ -1,0 +1,4 @@
+﻿.kiro
+config.yaml
+# Ignore MR conflict files with timestamps
+MR-conflict-*.md
