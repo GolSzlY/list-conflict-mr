@@ -72,4 +72,6 @@ type MergeRequest struct {
 	TargetBranch string    `json:"target_branch"`
 	HasConflicts bool      `json:"has_conflicts"`
 	CreatedAt    time.Time `json:"created_at"`
+	MergeStatus  string    `json:"merge_status"`
+	ChangesCount string    `json:"changes_count"`
 }

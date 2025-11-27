@@ -86,13 +86,15 @@ func generateMarkdownContent(report *models.Report) string {
 func generateRepositorySection(repoReport models.RepositoryReport) string {
 	var section strings.Builder
 
-	// Repository header with link and conflict indicator
-	conflictIcon := ""
+	// Repository header with link and status indicator
+	statusIcon := ""
 	if repoReport.Status == models.StatusConflicts {
-		conflictIcon = " ❌"
+		statusIcon = " ❌"
+	} else if repoReport.Status == models.StatusAccessible {
+		statusIcon = " ✅"
 	}
 
-	section.WriteString(fmt.Sprintf("### [%s](%s)%s\n", repoReport.Repository.Name, repoReport.Repository.WebURL, conflictIcon))
+	section.WriteString(fmt.Sprintf("### [%s](%s)%s\n", repoReport.Repository.Name, repoReport.Repository.WebURL, statusIcon))
 	section.WriteString(fmt.Sprintf("**Status**: %s\n", repoReport.Status.String()))
 
 	// Add error message if present

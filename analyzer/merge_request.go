@@ -48,7 +48,7 @@ func analyzeRepository(ctx context.Context, client *gitlab.Client, repo models.R
 	}
 
 	// Filter for conflicting MRs and sort by creation date (newest first)
-	conflictingMRs := filterAndSortConflictingMRs(mrs)
+	conflictingMRs := filterAndSortRealConflictingMRs(ctx, client, repo.ID, mrs)
 
 	// Update repository status based on findings
 	updatedRepo := repo
@@ -65,7 +65,8 @@ func analyzeRepository(ctx context.Context, client *gitlab.Client, repo models.R
 	return updatedRepo, nil
 }
 
-// filterAndSortConflictingMRs filters merge requests for conflicts and sorts by creation date (newest first)
+// filterAndSortConflictingMRs filters merge requests for basic conflicts and sorts by creation date (newest first)
+// This is the basic version used by tests
 func filterAndSortConflictingMRs(mrs []models.MergeRequest) []models.MergeRequest {
 	var conflictingMRs []models.MergeRequest
 
@@ -84,6 +85,40 @@ func filterAndSortConflictingMRs(mrs []models.MergeRequest) []models.MergeReques
 	return conflictingMRs
 }
 
+// filterAndSortRealConflictingMRs filters merge requests for real conflicts (with actual changes) and sorts by creation date (newest first)
+func filterAndSortRealConflictingMRs(ctx context.Context, client *gitlab.Client, projectID int, mrs []models.MergeRequest) []models.MergeRequest {
+	var conflictingMRs []models.MergeRequest
+
+	// Filter for conflicting MRs with exact branch matching
+	for _, mr := range mrs {
+		if mr.SourceBranch == "release" && mr.TargetBranch == "master" && mr.HasConflicts {
+			// Check if this MR has actual changes (not just an empty merge)
+			if hasActualChanges(ctx, client, projectID, mr.ID) {
+				conflictingMRs = append(conflictingMRs, mr)
+			}
+		}
+	}
+
+	// Sort by creation date (newest first)
+	sort.Slice(conflictingMRs, func(i, j int) bool {
+		return conflictingMRs[i].CreatedAt.After(conflictingMRs[j].CreatedAt)
+	})
+
+	return conflictingMRs
+}
+
+// hasActualChanges checks if a merge request has actual file changes
+func hasActualChanges(ctx context.Context, client *gitlab.Client, projectID, mrID int) bool {
+	changesCount, err := client.GetMergeRequestChanges(ctx, projectID, mrID)
+	if err != nil {
+		// If we can't get changes info, assume it has conflicts to be safe
+		return true
+	}
+
+	// Consider it a real conflict only if there are actual changes
+	return changesCount > 0
+}
+
 // GetConflictingMRs retrieves all conflicting merge requests from analyzed repositories
 func GetConflictingMRs(ctx context.Context, client *gitlab.Client, repositories []models.Repository) (map[int][]models.MergeRequest, error) {
 	conflictingMRs := make(map[int][]models.MergeRequest)
@@ -98,7 +133,7 @@ func GetConflictingMRs(ctx context.Context, client *gitlab.Client, repositories 
 			}
 
 			// Filter and sort conflicting MRs
-			conflicts := filterAndSortConflictingMRs(mrs)
+			conflicts := filterAndSortRealConflictingMRs(ctx, client, repo.ID, mrs)
 			if len(conflicts) > 0 {
 				conflictingMRs[repo.ID] = conflicts
 			}

@@ -205,6 +205,41 @@ func (c *Client) GetMergeRequest(ctx context.Context, projectID, mrID int) (*mod
 	return &mr, nil
 }
 
+// GetMergeRequestChanges retrieves the changes/diff information for a merge request
+func (c *Client) GetMergeRequestChanges(ctx context.Context, projectID, mrID int) (int, error) {
+	endpoint := fmt.Sprintf("/api/v4/projects/%d/merge_requests/%d/changes", projectID, mrID)
+
+	resp, err := c.makeRequest(ctx, "GET", endpoint)
+	if err != nil {
+		return 0, fmt.Errorf("failed to get merge request changes %d for project %d: %w", mrID, projectID, err)
+	}
+	defer resp.Body.Close()
+
+	var changes struct {
+		Changes []struct {
+			NewFile     bool   `json:"new_file"`
+			RenamedFile bool   `json:"renamed_file"`
+			DeletedFile bool   `json:"deleted_file"`
+			Diff        string `json:"diff"`
+		} `json:"changes"`
+	}
+
+	if err := json.NewDecoder(resp.Body).Decode(&changes); err != nil {
+		return 0, fmt.Errorf("failed to decode merge request changes response: %w", err)
+	}
+
+	// Count actual file changes (not just empty diffs)
+	actualChanges := 0
+	for _, change := range changes.Changes {
+		// Count as a real change if it's a new file, renamed, deleted, or has actual diff content
+		if change.NewFile || change.RenamedFile || change.DeletedFile || (change.Diff != "" && len(strings.TrimSpace(change.Diff)) > 0) {
+			actualChanges++
+		}
+	}
+
+	return actualChanges, nil
+}
+
 // TestConnection verifies that the client can authenticate with GitLab
 func (c *Client) TestConnection(ctx context.Context) error {
 	endpoint := "/api/v4/user"

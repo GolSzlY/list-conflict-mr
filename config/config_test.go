@@ -208,8 +208,9 @@ func TestConfig_Validate(t *testing.T) {
 			name: "valid config",
 			config: Config{
 				GitLab: struct {
-					Token string `yaml:"token"`
-					URL   string `yaml:"url"`
+					Token         string `yaml:"token"`
+					URL           string `yaml:"url"`
+					IncludeGroups []int  `yaml:"include_groups,omitempty"`
 				}{
 					Token: "valid-token",
 					URL:   "https://gitlab.com",
@@ -221,8 +222,9 @@ func TestConfig_Validate(t *testing.T) {
 			name: "missing token",
 			config: Config{
 				GitLab: struct {
-					Token string `yaml:"token"`
-					URL   string `yaml:"url"`
+					Token         string `yaml:"token"`
+					URL           string `yaml:"url"`
+					IncludeGroups []int  `yaml:"include_groups,omitempty"`
 				}{
 					Token: "",
 					URL:   "https://gitlab.com",
@@ -235,8 +237,9 @@ func TestConfig_Validate(t *testing.T) {
 			name: "missing URL",
 			config: Config{
 				GitLab: struct {
-					Token string `yaml:"token"`
-					URL   string `yaml:"url"`
+					Token         string `yaml:"token"`
+					URL           string `yaml:"url"`
+					IncludeGroups []int  `yaml:"include_groups,omitempty"`
 				}{
 					Token: "valid-token",
 					URL:   "",

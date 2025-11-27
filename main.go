@@ -116,6 +116,12 @@ func run(ctx context.Context, configPath, outputDir string) error {
 	}
 	slog.Info("Configuration loaded successfully", "gitlab_url", cfg.GitLab.URL)
 
+	// Use config output directory if command line output is default and config has output directory
+	if outputDir == "." && cfg.Output.Directory != "" {
+		outputDir = cfg.Output.Directory
+		slog.Info("Using output directory from config", "output_dir", outputDir)
+	}
+
 	// 2. Initialize GitLab client
 	slog.Debug("Initializing GitLab client")
 	client := gitlab.NewClient(cfg.GitLab.URL, cfg.GitLab.Token)

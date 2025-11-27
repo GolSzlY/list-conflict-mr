@@ -14,6 +14,9 @@ type Config struct {
 		URL           string `yaml:"url"`
 		IncludeGroups []int  `yaml:"include_groups,omitempty"`
 	} `yaml:"gitlab"`
+	Output struct {
+		Directory string `yaml:"directory,omitempty"`
+	} `yaml:"output,omitempty"`
 }
 
 // LoadConfig reads and parses the YAML configuration file

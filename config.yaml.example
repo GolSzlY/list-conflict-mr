@@ -1,0 +1,7 @@
+gitlab:
+  token: "glpat-YOUR_GITLAB_ACCESS_TOKEN_HERE"
+  url: "YOUR_GITLAB_URL_HERE"
+  include_groups: [] # Only scan repositories from these group IDs
+
+output:
+  directory: "./reports" # Default output directory for MR conflict reports

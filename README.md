@@ -55,15 +55,58 @@ Create a YAML configuration file with your GitLab credentials:
 ```yaml
 # config.yaml
 gitlab:
-  token: "your-gitlab-access-token"
-  url: "https://gitlab.example.com"
+  token: "glpat-YOUR_GITLAB_ACCESS_TOKEN_HERE"
+  url: "YOUR_GITLAB_URL_HERE"
+  include_groups: [] # Optional: Only scan repositories from these group IDs (leave empty to scan all accessible repos)
+
+output:
+  directory: "./reports" # Optional: Default output directory for MR conflict reports
 ```
+
+### Configuration Options
+
+| Option | Description | Required | Default |
+|--------|-------------|----------|---------|
+| `gitlab.token` | GitLab access token (format: `glpat-xxx`) | Yes | - |
+| `gitlab.url` | GitLab instance URL | Yes | - |
+| `gitlab.include_groups` | Array of group IDs to scan (empty = scan all) | No | `[]` |
+| `output.directory` | Default output directory for reports | No | `"."` |
 
 ### GitLab Token Requirements
 
 Your GitLab access token needs the following scopes:
 - `read_api` - To access repository and merge request information
 - `read_repository` - To access repository metadata
+
+### Group Filtering
+
+Use the `include_groups` option to limit scanning to specific GitLab groups:
+
+```yaml
+gitlab:
+  token: "glpat-YOUR_TOKEN"
+  url: "https://gitlab.example.com"
+  include_groups: [123, 456, 789] # Only scan repos from these group IDs
+```
+
+To find group IDs:
+1. Navigate to your GitLab group
+2. Check the URL or group settings for the numeric ID
+3. Or use the GitLab API: `GET /groups?search=group-name`
+
+### Output Directory Configuration
+
+Configure where MR conflict reports are saved:
+
+```yaml
+output:
+  directory: "./reports"  # Reports will be saved to ./reports/MR-conflict-*.md
+```
+
+Priority order for output directory:
+1. Command line `--output` flag (highest priority)
+2. Config file `output.directory` setting
+3. Current directory `.` (default)
 
 ## Usage
 
